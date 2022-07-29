@@ -30,7 +30,7 @@ fn main() {
 
 fn start_thread(client: TcpStream, tx: mpsc::Sender<String>) {
     let mut reader = BufReader::new(client);
-    thread::spawn(move || {
+    thread::spawn(move || loop {
         let mut msg = String::new();
         if let Ok(n) = reader.read_line(&mut msg) {
             if n > 0 {
