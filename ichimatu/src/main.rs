@@ -1,25 +1,33 @@
+use std::sync::mpsc;
 use std::{thread, time};
 
 fn main() {
-    println!("--スレッドなし---");
-    sleep_print("スレッドなし");
+    let (tx, rx) = mpsc::channel::<String>();
 
-    println!("--スレッドを利用--");
-
+    let sender = tx.clone();
     thread::spawn(|| {
-        sleep_print("次郎");
+        sleep_sender("太郎", sender);
     });
 
+    let sender = tx.clone();
     thread::spawn(|| {
-        sleep_print("三郎");
+        sleep_sender("次郎", sender);
     });
 
-    sleep_print("太郎");
+    loop {
+        let buf = rx.recv().unwrap();
+        println!("[受信] {}", buf);
+        if buf == "quit" {
+            break;
+        }
+    }
 }
 
-fn sleep_print(name: &str) {
-    for i in 1..=3 {
-        println!("{}: i={}", name, i);
+fn sleep_sender(name: &str, sender: mpsc::Sender<String>) {
+    for i in 1..=5 {
+        let msg = format!("{}: {}", name, i);
+        sender.send(msg).unwrap();
         thread::sleep(time::Duration::from_millis(1000));
     }
+    sender.send("quit".to_string()).unwrap();
 }
